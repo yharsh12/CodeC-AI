@@ -1,0 +1,236 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Inter,Segoe UI,sans-serif
+}
+html,body,#root{
+  height:100%;
+  overflow:hidden
+}
+body{
+  background:linear-gradient(135deg,rgb(26,15,10),rgb(59,36,20),rgb(122,74,31),rgb(192,138,43),rgb(226,180,74),rgb(245,210,122));
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px
+}
+.app{
+  width:100%;
+  height:100%;
+  max-width:1350px;
+  display:flex;
+  flex-direction:column;
+  border-radius:26px;
+  overflow:hidden;
+  background:rgba(20,12,8,.55);
+  backdrop-filter:blur(22px);
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 30px 90px rgba(0,0,0,.55)
+}
+.header{
+  text-align:center;
+  padding:16px 20px;
+  border-bottom:1px solid rgba(255,255,255,.08)
+}
+.title{
+  font-size:54px;
+  font-weight:900;
+  letter-spacing:8px;
+  color:rgb(245,210,122);
+  text-shadow:0 0 10px rgba(245,210,122,.6),0 0 20px rgba(192,138,43,.5)
+}
+.toolbar{
+  display:flex;
+  gap:12px;
+  padding:14px 20px;
+  align-items:center
+}
+select,button{
+  height:44px;
+  border:none;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer
+}
+select{
+  width:60%;
+  padding:0 12px;
+  background:rgb(255,248,234);
+  color:rgb(59,36,20);
+  font-size:16px
+}
+.toolbar button{
+  width:10%;
+  font-size:13px
+}
+.run{
+  background:linear-gradient(135deg,rgb(245,210,122),rgb(192,138,43));
+  color:rgb(59,36,20);
+}
+.debug{
+  background:linear-gradient(135deg,rgb(226,180,74),rgb(122,74,31),rgb(59,36,20));
+  color:white
+}
+.explain{
+  background:linear-gradient(135deg,rgb(245,210,122),rgb(192,138,43));
+  color:rgb(59,36,20);
+}
+.optimize{
+  background:linear-gradient(135deg,rgb(226,180,74),rgb(122,74,31),rgb(59,36,20));
+  color:white;
+}
+.toolbar button:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.1)
+}
+.editor-wrapper{
+  padding:0 20px 10px;
+  flex:1;
+  display:flex;
+  min-height:0
+}
+.editor{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  background:rgb(255,253,247);
+  border-radius:18px;
+  overflow:hidden
+}
+
+.editor-head{
+  padding:10px 14px;
+  background:rgb(243,226,191);
+  font-weight:700;
+  color:rgb(90,58,31);
+}
+textarea{
+  flex:1;
+  resize:none;
+  border:none;
+  outline:none;
+  padding:14px;
+  font-family:Consolas,monospace;
+  font-size:14px;
+  color:rgb(45,33,24);
+  background:rgb(255,253,247);
+}
+.bottom-panel{
+  margin:0 20px 10px;
+  height:190px;
+  min-height:190px;
+  background:rgb(23,18,15);
+  border:1px solid rgba(245,210,122,.22);
+  border-radius:14px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column
+}
+.tabs{
+  display:flex;
+  height:42px;
+  background:rgb(33,24,18);
+  border-bottom:1px solid rgba(245,210,122,.15)
+}
+.tabs button{
+  width:auto;
+  height:42px;
+  padding:0 18px;
+  border-radius:0;
+  background:transparent;
+  color:rgb(169,155,140);
+  font-size:12px;
+  letter-spacing:.5px;
+  border-bottom:2px solid transparent
+}
+.tabs button:hover{
+  color:rgb(245,210,122);
+  background:rgba(245,210,122,.05);
+  transform:none;
+  filter:none
+}
+.tabs button.active{
+  color:rgb(245,210,122);
+  border-bottom:2px solid rgb(245,210,122);
+  background:rgba(245,210,122,.06)
+}
+.panel-content{
+  flex:1;
+  padding:14px;
+  overflow:auto;
+  color:rgb(232,223,213);
+  font-family:Consolas,monospace
+}
+.panel-content h3{
+  color:rgb(245,210,122);
+  font-size:13px;
+  margin-bottom:10px;
+  font-family:Inter,Segoe UI,sans-serif
+}
+.panel-content pre{
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  font-family:Consolas,monospace;
+  font-size:13px;
+  line-height:1.5
+}
+.terminal-line{
+  color:rgb(184,170,154);
+  margin-bottom:10px;
+  font-family:Consolas,monospace
+}
+.terminal-line span{
+  color:rgb(245,210,122);
+  margin-right:8px
+}
+.output-content pre{
+  color:rgb(232,223,213);
+}
+.problems-content pre{
+  color:rgb(232,223,213);
+}
+.ai-content pre{
+  color:rgb(241,230,215);
+}
+.complexity-content{
+  display:flex;
+  gap:15px
+}
+.complexity-box{
+  flex:1;
+  padding:15px;
+  background:rgba(245,210,122,.06);
+  border:1px solid rgba(245,210,122,.15);
+  border-radius:10px
+}
+.complexity-box h3{
+  margin-bottom:8px
+}
+.complexity-box div{
+  color:rgb(255,255,255);
+  font-size:20px;
+  font-weight:700
+}
+.footer{
+  text-align:center;
+  padding:10px;
+  font-size:12px;
+  color:rgb(231,195,122);
+  border-top:1px solid rgba(255,255,255,.08)
+}
+@media(max-width:768px){
+  .toolbar{
+    gap:6px
+  }
+  select{
+    width:50%
+  }
+  .toolbar button{
+    width:12.5%
+  }
+  .tabs button{
+    padding:0 10px;
+    font-size:10px
+  }
+}
