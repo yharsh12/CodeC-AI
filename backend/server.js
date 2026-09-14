@@ -1,4 +1,3 @@
-
 const express=require("express");
 const cors=require("cors");
 const dotenv=require("dotenv");
@@ -9,15 +8,17 @@ const AI=require("./ai");
 const runCode=require("./judge0");
 const app=express();
 connectDB();
-app.use(cors());
+app.use(cors({
+  origin:process.env.FRONTEND_URL||"http://localhost:5173"
+}));
 app.use(express.json());
 app.get("/",(req,res)=>{
   res.send("CODEC Backend Running");
 });
 app.post("/run",async(req,res)=>{
   try{
-    const{language,code}=req.body;
-    const result=await runCode(language,code);
+    const{language,code,input=""}=req.body;
+    const result=await runCode(language,code,input);
     await History.create({
       language,
       code,
@@ -28,7 +29,7 @@ app.post("/run",async(req,res)=>{
     });
     res.json({
       output:result.output,
-      time:result.time,
+      runtime:result.time,
       memory:result.memory,
       status:result.status
     });
@@ -36,7 +37,43 @@ app.post("/run",async(req,res)=>{
   catch(err){
     console.log(err);
     res.status(500).json({
-      error:err.response?.data?.error || err.message
+      error:err.response?.data?.error||err.message
+    });
+  }
+});
+app.post("/complexity",async(req,res)=>{
+  try{
+    const{language,code}=req.body;
+    const prompt=`
+You are an expert ${language} programmer and algorithm analyst.
+Analyze the following code and determine its algorithmic complexity.
+Return ONLY valid JSON in exactly this format:
+{
+  "time":"O(...)",
+  "space":"O(...)"
+}
+Rules:
+- Give the asymptotic worst-case time complexity.
+- Give the auxiliary space complexity.
+- Do not use actual execution time.
+- Do not include explanations outside the JSON.
+- Carefully analyze loops, nested loops, recursion, sorting, searching, and data structures.
+- Use precise notation such as O(1), O(log n), O(n), O(n log n), O(n^2), O(sqrt(n)), etc.
+Code:
+${code}
+`;
+    const result=await AI(prompt);
+    const clean=result.replace(/```json/g,"").replace(/```/g,"").trim();
+    const data=JSON.parse(clean);
+    res.json({
+      time:data.time,
+      space:data.space
+    });
+  }
+  catch(err){
+    console.log("COMPLEXITY ERROR:",err);
+    res.status(500).json({
+      error:err.message
     });
   }
 });
@@ -44,18 +81,18 @@ app.post("/debug",async(req,res)=>{
   try{
     const{language,code}=req.body;
     const prompt=`
-    You are an expert ${language} programmer.
-    Analyze the following code:
-    ${code}
-    Find bugs, logical errors, syntax errors, and possible runtime errors.
-    Return ONLY valid JSON in exactly this format:
-    {
-      "ai":"Explain the bugs and how to fix them.",
-      "time":"O(...)",
-      "space":"O(...)"
-    }
-    If there are no bugs, say that clearly in the ai field.
-    `;
+You are an expert ${language} programmer.
+Analyze the following code:
+${code}
+Find bugs, logical errors, syntax errors, and possible runtime errors.
+Return ONLY valid JSON in exactly this format:
+{
+  "ai":"Explain the bugs and how to fix them.",
+  "time":"O(...)",
+  "space":"O(...)"
+}
+If there are no bugs, say that clearly in the ai field.
+`;
     const result=await AI(prompt);
     const clean=result.replace(/```json/g,"").replace(/```/g,"").trim();
     const data=JSON.parse(clean);
@@ -84,14 +121,14 @@ app.post("/explain",async(req,res)=>{
   try{
     const{language,code}=req.body;
     const prompt=`
-    Explain this ${language} code in simple words.
-    Explain:
-    1. What the code does
-    2. How it works
-    3. Important parts of the code
-    Code:
-    ${code}
-    `;
+Explain this ${language} code in simple words.
+Explain:
+1. What the code does
+2. How it works
+3. Important parts of the code
+Code:
+${code}
+`;
     const result=await AI(prompt);
     res.json({
       result
@@ -108,20 +145,20 @@ app.post("/optimize",async(req,res)=>{
   try{
     const{language,code}=req.body;
     const prompt=`
-    You are an expert ${language} programmer.
-    Optimize this code.
-    Return:
-    Optimized Code:
-    <optimized code>
-    Explanation:
-    <explain what was improved>
-    Time Complexity:
-    <complexity>
-    Space Complexity:
-    <complexity>
-    Original Code:
-    ${code}
-    `;
+You are an expert ${language} programmer.
+Optimize this code.
+Return:
+Optimized Code:
+<optimized code>
+Explanation:
+<explain what was improved>
+Time Complexity:
+<complexity>
+Space Complexity:
+<complexity>
+Original Code:
+${code}
+`;
     const result=await AI(prompt);
     res.json({
       result
@@ -146,7 +183,7 @@ app.get("/history",async(req,res)=>{
     });
   }
 });
-app.listen(5100,()=>{
-  console.log("Server running on port 5100");
+const PORT=process.env.PORT||5100;
+app.listen(PORT,()=>{
+  console.log(`Server running on port ${PORT}`);
 });
-
