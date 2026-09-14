@@ -1,93 +1,96 @@
 import {useState} from "react";
 import "./App.css";
 import axios from "axios";
+const API_URL=import.meta.env.VITE_API_URL;
 function App(){
   const [language,setLanguage]=useState("cpp");
   const [code,setCode]=useState("//Write your code here");
+  const [input,setInput]=useState("");
   const [output,setOutput]=useState(" ");
   const [aiOutput,setAiOutput]=useState(" ");
-  const [time,setTime]=useState("O(1)");
-  const [space,setSpace]=useState("O(1)");
+  const [runtime,setRuntime]=useState("—");
+  const [time,setTime]=useState("—");
+  const [space,setSpace]=useState("—");
   const [activeTab,setActiveTab]=useState("TERMINAL");
   const [status,setStatus]=useState(" ");
   async function runCode(){
     try{
       setActiveTab("TERMINAL");
-      setOutput("Running");
-      const res=await axios.post("http://localhost:5100/run",{
+      setOutput("Running...");
+      setRuntime("—");
+      setTime("—");
+      setSpace("—");
+      setStatus("Running");
+      const runRequest=axios.post(`${API_URL}/run`,{
+        language,
+        code,
+        input
+      });
+      const complexityRequest=axios.post(`${API_URL}/complexity`,{
         language,
         code
       });
-      setOutput(res.data.output || "No output");
-      setTime(res.data.time || "0");
-      setStatus(res.data.status || "Unknown");
+      const [runRes,complexityRes]=await Promise.all([
+        runRequest,
+        complexityRequest
+      ]);
+      setOutput(runRes.data.output||"No output");
+      setRuntime(runRes.data.runtime||"—");
+      setStatus(runRes.data.status||"Unknown");
+      setTime(complexityRes.data.time||"Unknown");
+      setSpace(complexityRes.data.space||"Unknown");
     }
     catch(err){
-      setOutput(err.response?.data?.error || "Server Error");
+      setOutput(err.response?.data?.error||"Server Error");
+      setStatus("Error");
     }
   }
   async function debugCode(){
     try{
       setActiveTab("AI REVIEW");
-      setAiOutput("Analyzing");
-      const res=await axios.post("http://localhost:5100/debug",{
-        language,code
+      setAiOutput("Analyzing...");
+      const res=await axios.post(`${API_URL}/debug`,{
+        language,
+        code
       });
-      setAiOutput(cleanAI(res.data.ai));
-      setTime(res.data.time);
-      setSpace(res.data.space);
+      setAiOutput(cleanAI(res.data.ai||"No AI response"));
+      setTime(res.data.time||"Unknown");
+      setSpace(res.data.space||"Unknown");
     }
     catch(err){
-      setAiOutput("Debug Failed");
+      setAiOutput(err.response?.data?.error||"Debug Failed");
     }
   }
   async function explainCode(){
     try{
       setActiveTab("AI REVIEW");
       setAiOutput("Explaining");
-      const res=await axios.post("http://localhost:5100/explain",{
-        language,code
+      const res=await axios.post(`${API_URL}/explain`,{
+        language,
+        code
       });
-      setAiOutput(cleanAI(res.data.result));
+      setAiOutput(cleanAI(res.data.result||"No explanation available"));
     }
     catch(err){
-      setAiOutput("Explanation Failed");
+      setAiOutput(err.response?.data?.error||"Explanation Failed");
     }
   }
   async function optimizeCode(){
     try{
       setActiveTab("AI REVIEW");
       setAiOutput("Optimizing");
-      const res=await axios.post("http://localhost:5100/optimize",{
-        language,code
+      const res=await axios.post(`${API_URL}/optimize`,{
+        language,
+        code
       });
-      setAiOutput(cleanAI(res.data.result));
+      setAiOutput(cleanAI(res.data.result||"No optimization available"));
     }
     catch(err){
-      setAiOutput("Optimization Failed");
+      setAiOutput(err.response?.data?.error||"Optimization Failed");
     }
   }
   function cleanAI(text){
-    return text
-      .replace(/^#{1,6}\s*/gm,"")
-      .replace(/\*\*(.*?)\*\*/g,"$1")
-      .replace(/\*(.*?)\*/g,"$1")
-      .replace(/`{3}[\w]*\n?/g,"")
-      .replace(/`/g,"")
-      .replace(/^\s*[-*]\s+/gm,"• ")
-      .trim();
-  }
-  function handleTab(e){
-    if(e.key==="Tab"){
-      e.preventDefault();
-      const start=e.target.selectionStart;
-      const end=e.target.selectionEnd;
-      const newCode=code.substring(0,start)+"    "+code.substring(end);
-      setCode(newCode);
-      setTimeout(()=>{
-        e.target.selectionStart=e.target.selectionEnd=start+4;
-      });
-    }
+    return String(text).replace(/^#{1,6}\s*/gm,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/`{3}[\w]*\n?/g,"").replace(/`/g,"").replace(/^\s*[-*]\s+/gm,"• ").trim();
   }
   function handleKeyDown(e){
     const textarea=e.target;
@@ -129,6 +132,7 @@ function App(){
           setCode(newCode);
         }
       }
+      return;
     }
     if(e.key==="Enter"){
       e.preventDefault();
@@ -169,13 +173,12 @@ function App(){
       </div>
       <div className="editor-wrapper">
         <div className="editor">
-          <div className="editor-head">
-            Source Code
-          </div>
+          <div className="editor-head">Source Code</div>
           <textarea
             value={code}
             onChange={e=>setCode(e.target.value)}
             onKeyDown={handleKeyDown}
+            spellCheck={false}
           />
         </div>
       </div>
@@ -186,6 +189,12 @@ function App(){
             onClick={()=>showTab("TERMINAL")}
           >
             TERMINAL
+          </button>
+          <button
+            className={activeTab==="INPUT"?"active":""}
+            onClick={()=>showTab("INPUT")}
+          >
+            INPUT
           </button>
           <button
             className={activeTab==="OUTPUT"?"active":""}
@@ -221,6 +230,20 @@ function App(){
               <pre>{output}</pre>
             </div>
           )}
+          {activeTab==="INPUT"&&(
+            <div className="input-panel">
+              <div className="input-bar">
+                <span>stdin</span>
+                <button onClick={()=>setInput("")}>Clear</button>
+              </div>
+              <textarea
+                value={input}
+                onChange={e=>setInput(e.target.value)}
+                placeholder="Enter program input..."
+                spellCheck={false}
+              />
+            </div>
+          )}
           {activeTab==="OUTPUT"&&(
             <div className="output-content">
               <h3>Program Output</h3>
@@ -230,7 +253,11 @@ function App(){
           {activeTab==="PROBLEMS"&&(
             <div className="problems-content">
               <h3>Problems</h3>
-              <pre>{output==="Waiting"?"No problems detected":output}</pre>
+              <pre>
+                {status==="Error"||output.includes("error")
+                  ?output
+                  :"No problems detected"}
+              </pre>
             </div>
           )}
           {activeTab==="AI REVIEW"&&(
@@ -241,6 +268,10 @@ function App(){
           )}
           {activeTab==="COMPLEXITY"&&(
             <div className="complexity-content">
+              <div className="complexity-box">
+                <h3>Runtime</h3>
+                <div>{runtime}</div>
+              </div>
               <div className="complexity-box">
                 <h3>Time Complexity</h3>
                 <div>{time}</div>
